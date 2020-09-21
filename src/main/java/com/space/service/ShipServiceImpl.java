@@ -11,6 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Calendar;
@@ -53,8 +57,8 @@ public class ShipServiceImpl implements ShipService {
         if (ship.getUsed() == null)
             ship.setUsed(false);
 
-        Double raiting = calculateRating(ship);
-        ship.setRating(raiting);
+        Double rating = calculateRating(ship);
+        ship.setRating(rating);
 
         return shipRepository.saveAndFlush(ship);
     }
@@ -152,96 +156,126 @@ public class ShipServiceImpl implements ShipService {
         int year = cal.get(Calendar.YEAR);
 
         //calculate rating
-        BigDecimal raiting = new BigDecimal((80 * ship.getSpeed() * (ship.getUsed() ? 0.5 : 1)) / (3019 - year + 1));
+        BigDecimal rating = new BigDecimal((80 * ship.getSpeed() * (ship.getUsed() ? 0.5 : 1)) / (3019 - year + 1));
         //round rating to 2 decimal places
-        raiting = raiting.setScale(2, RoundingMode.HALF_UP);
-        return raiting.doubleValue();
+        rating = rating.setScale(2, RoundingMode.HALF_UP);
+        return rating.doubleValue();
     }
 
     @Override
     public Specification<Ship> filterByName(String name) {
-        return (root, query, cb) -> name == null ? null : cb.like(root.get("name"), "%" + name + "%");
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                return name == null ? null : cb.like(root.get("name"), "%" + name + "%");
+            }
+        };
     }
 
     @Override
     public Specification<Ship> filterByPlanet(String planet) {
-        return (root, query, cb) -> planet == null ? null : cb.like(root.get("planet"), "%" + planet + "%");
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                return planet == null ? null : cb.like(root.get("planet"), "%" + planet + "%");
+            }
+        };
     }
 
     @Override
     public Specification<Ship> filterByShipType(ShipType shipType) {
-        return (root, query, cb) -> shipType == null ? null : cb.equal(root.get("shipType"), shipType);
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                return shipType == null ? null : cb.equal(root.get("shipType"), shipType);
+            }
+        };
     }
 
     @Override
     public Specification<Ship> filterByDate(Long after, Long before) {
-        return (root, query, cb) -> {
-            if (after == null && before == null)
-                return null;
-            if (after == null) {
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                if (after == null && before == null)
+                    return null;
+                if (after == null) {
+                    Date before1 = new Date(before);
+                    return cb.lessThanOrEqualTo(root.get("prodDate"), before1);
+                }
+                if (before == null) {
+                    Date after1 = new Date(after);
+                    return cb.greaterThanOrEqualTo(root.get("prodDate"), after1);
+                }
                 Date before1 = new Date(before);
-                return cb.lessThanOrEqualTo(root.get("prodDate"), before1);
-            }
-            if (before == null) {
                 Date after1 = new Date(after);
-                return cb.greaterThanOrEqualTo(root.get("prodDate"), after1);
+                return cb.between(root.get("prodDate"), after1, before1);
             }
-            Date before1 = new Date(before);
-            Date after1 = new Date(after);
-            return cb.between(root.get("prodDate"), after1, before1);
         };
     }
 
     @Override
     public Specification<Ship> filterByUsage(Boolean isUsed) {
-        return (root, query, cb) -> {
-            if (isUsed == null)
-                return null;
-            if (isUsed)
-                return cb.isTrue(root.get("isUsed"));
-            else return cb.isFalse(root.get("isUsed"));
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                if (isUsed == null)
+                    return null;
+                if (isUsed)
+                    return cb.isTrue(root.get("isUsed"));
+                else return cb.isFalse(root.get("isUsed"));
+            }
         };
     }
 
     @Override
     public Specification<Ship> filterBySpeed(Double min, Double max) {
-        return (root, query, cb) -> {
-            if (min == null && max == null)
-                return null;
-            if (min == null)
-                return cb.lessThanOrEqualTo(root.get("speed"), max);
-            if (max == null)
-                return cb.greaterThanOrEqualTo(root.get("speed"), min);
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                if (min == null && max == null)
+                    return null;
+                if (min == null)
+                    return cb.lessThanOrEqualTo(root.get("speed"), max);
+                if (max == null)
+                    return cb.greaterThanOrEqualTo(root.get("speed"), min);
 
-            return cb.between(root.get("speed"), min, max);
+                return cb.between(root.get("speed"), min, max);
+            }
         };
     }
 
     @Override
     public Specification<Ship> filterByCrewSize(Integer min, Integer max) {
-        return (root, query, cb) -> {
-            if (min == null && max == null)
-                return null;
-            if (min == null)
-                return cb.lessThanOrEqualTo(root.get("crewSize"), max);
-            if (max == null)
-                return cb.greaterThanOrEqualTo(root.get("crewSize"), min);
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                if (min == null && max == null)
+                    return null;
+                if (min == null)
+                    return cb.lessThanOrEqualTo(root.get("crewSize"), max);
+                if (max == null)
+                    return cb.greaterThanOrEqualTo(root.get("crewSize"), min);
 
-            return cb.between(root.get("crewSize"), min, max);
+                return cb.between(root.get("crewSize"), min, max);
+            }
         };
     }
 
     @Override
     public Specification<Ship> filterByRating(Double min, Double max) {
-        return (root, query, cb) -> {
-            if (min == null && max == null)
-                return null;
-            if (min == null)
-                return cb.lessThanOrEqualTo(root.get("rating"), max);
-            if (max == null)
-                return cb.greaterThanOrEqualTo(root.get("rating"), min);
+        return new Specification<Ship>() {
+            @Override
+            public Predicate toPredicate(Root<Ship> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+                if (min == null && max == null)
+                    return null;
+                if (min == null)
+                    return cb.lessThanOrEqualTo(root.get("rating"), max);
+                if (max == null)
+                    return cb.greaterThanOrEqualTo(root.get("rating"), min);
 
-            return cb.between(root.get("rating"), min, max);
+                return cb.between(root.get("rating"), min, max);
+            }
         };
     }
 }

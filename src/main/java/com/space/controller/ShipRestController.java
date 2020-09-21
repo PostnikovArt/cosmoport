@@ -27,21 +27,22 @@ public class ShipRestController {
 
     @GetMapping(value = "/ships")
     @ResponseStatus(HttpStatus.OK)
-    public List<Ship> getAllShips(@RequestParam(value = "name", required = false) String name,
-                                  @RequestParam(value = "planet", required = false) String planet,
-                                  @RequestParam(value = "shipType", required = false) ShipType shipType,
-                                  @RequestParam(value = "after", required = false) Long after,
-                                  @RequestParam(value = "before", required = false) Long before,
-                                  @RequestParam(value = "isUsed", required = false) Boolean isUsed,
-                                  @RequestParam(value = "minSpeed", required = false) Double minSpeed,
-                                  @RequestParam(value = "maxSpeed", required = false) Double maxSpeed,
-                                  @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize,
-                                  @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
-                                  @RequestParam(value = "minRating", required = false) Double minRating,
-                                  @RequestParam(value = "maxRating", required = false) Double maxRating,
-                                  @RequestParam(value = "order", required = false, defaultValue = "ID") ShipOrder order,
-                                  @RequestParam(value = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
-                                  @RequestParam(value = "pageSize", required = false, defaultValue = "3") Integer pageSize) {
+    public List<Ship> getAllShips(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "planet", required = false) String planet,
+            @RequestParam(value = "shipType", required = false) ShipType shipType,
+            @RequestParam(value = "after", required = false) Long after,
+            @RequestParam(value = "before", required = false) Long before,
+            @RequestParam(value = "isUsed", required = false) Boolean isUsed,
+            @RequestParam(value = "minSpeed", required = false) Double minSpeed,
+            @RequestParam(value = "maxSpeed", required = false) Double maxSpeed,
+            @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize,
+            @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
+            @RequestParam(value = "minRating", required = false) Double minRating,
+            @RequestParam(value = "maxRating", required = false) Double maxRating,
+            @RequestParam(value = "order", required = false, defaultValue = "ID") ShipOrder order,
+            @RequestParam(value = "pageNumber", required = false, defaultValue = "0") Integer pageNumber,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "3") Integer pageSize) {
 
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(order.getFieldName()));
@@ -60,18 +61,19 @@ public class ShipRestController {
 
     @RequestMapping(value = "/ships/count", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public Integer getCount(@RequestParam(value = "name", required = false) String name,
-                            @RequestParam(value = "planet", required = false) String planet,
-                            @RequestParam(value = "shipType", required = false) ShipType shipType,
-                            @RequestParam(value = "after", required = false) Long after,
-                            @RequestParam(value = "before", required = false) Long before,
-                            @RequestParam(value = "isUsed", required = false) Boolean isUsed,
-                            @RequestParam(value = "minSpeed", required = false) Double minSpeed,
-                            @RequestParam(value = "maxSpeed", required = false) Double maxSpeed,
-                            @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize,
-                            @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
-                            @RequestParam(value = "minRating", required = false) Double minRating,
-                            @RequestParam(value = "maxRating", required = false) Double maxRating) {
+    public Integer getCount(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "planet", required = false) String planet,
+            @RequestParam(value = "shipType", required = false) ShipType shipType,
+            @RequestParam(value = "after", required = false) Long after,
+            @RequestParam(value = "before", required = false) Long before,
+            @RequestParam(value = "isUsed", required = false) Boolean isUsed,
+            @RequestParam(value = "minSpeed", required = false) Double minSpeed,
+            @RequestParam(value = "maxSpeed", required = false) Double maxSpeed,
+            @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize,
+            @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
+            @RequestParam(value = "minRating", required = false) Double minRating,
+            @RequestParam(value = "maxRating", required = false) Double maxRating) {
 
         return service.gelAllShips(
                 Specification.where(service.filterByName(name)
@@ -89,18 +91,14 @@ public class ShipRestController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Ship addShip(@RequestBody Ship ship) {
-
         return service.createShip(ship);
-
     }
 
     @GetMapping(value = "/ships/{id}")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Ship getShip(@PathVariable(value = "id") String id) {
-
         Long longId = service.checkAndParseId(id);
-
         return service.getShip(longId);
     }
 
@@ -108,9 +106,7 @@ public class ShipRestController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Ship editShip(@PathVariable(value = "id") String id, @RequestBody Ship ship) {
-
         Long longId = service.checkAndParseId(id);
-
         return service.editShip(longId, ship);
     }
 
@@ -118,10 +114,7 @@ public class ShipRestController {
     @ResponseStatus(HttpStatus.OK)
 
     public void deleteShip(@PathVariable(value = "id") String id) {
-
         Long longId = service.checkAndParseId(id);
-
         service.deleteById(longId);
-
     }
 }
